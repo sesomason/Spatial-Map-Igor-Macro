@@ -891,19 +891,24 @@ Function SML_button_appendcursor(ctrlName) : ButtonControl
 	NVAR pxvalue = dfr:SML_pxvalue,pyvalue = dfr:SML_pyvalue
 	SVAR cwinname = dfr:SML_CurrentWinName
 	
-	String  traceList = TraceNameList("", ";", 1)
-	variable  cond1 = stringmatch(traceList,"*pointAy*")
+	String  traceList = TraceNameList("", ";", 1)  // Get trace (1dwave) list of Top graph 
+	variable  cond1 = stringmatch(traceList,"*pointAy*") // is there pointAy wave?
 	
-	if (cond1==0)
-		cwinname = winname(0,1,1)
+	if (cond1==0)  // case of appendiong cursor and pointAy box
+	
+		cwinname = winname(0,1,1)  // get topwindow name
 		AppendToGraph :SpatialMapLoad:pointAy vs :SpatialMapLoad:pointAx
 		SML_Update_cursor()
-		string imagename = StringFromList(0, ImageNameList("", ";"))
-		cursor /H=1/I/S=2 G $imagename pxvalue,pyvalue
-		SetWindow $cwinname hook(myHook)=SML_CursorProc
-	elseif (cond1==1)
-		SetWindow $cwinname hook(myHook)=$""
-		RemoveFromGraph pointAy
+		SML_DataLoadTmp()
+		
+		string imagename = StringFromList(0, ImageNameList("", ";")) // get 2dmat name of top window
+		cursor /H=1/I/S=2 G $imagename pxvalue,pyvalue   // append cursor (cross type)
+		SetWindow $cwinname hook(myHook)=SML_CursorProc  // hook the curdor to macro of SML_CursorProc
+		
+		
+	elseif (cond1==1) //case of removing cursor and pointAy box
+		SetWindow $cwinname hook(myHook)=$""  // hook off the curdor 
+		RemoveFromGraph pointAy  
 		cursor /K G 
 		
 	endif
