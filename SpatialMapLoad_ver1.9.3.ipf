@@ -859,7 +859,8 @@ Function SML_button_appendbox(ctrlName) : ButtonControl
 			elseif (cond1==1)
 				RemoveFromGraph integbox_y
 			endif
-			break		
+			break
+			
 		case 1:
 		
 			wavelist1 = listmatch(traceList,"!integline_y*")
@@ -892,27 +893,44 @@ Function SML_button_appendcursor(ctrlName) : ButtonControl
 	SVAR cwinname = dfr:SML_CurrentWinName
 	
 	String  traceList = TraceNameList("", ";", 1)  // Get trace (1dwave) list of Top graph 
+
 	variable  cond1 = stringmatch(traceList,"*pointAy*") // is there pointAy wave?
 	
-	if (cond1==0)  // case of appendiong cursor and pointAy box
+	string mapname
+	variable dim
+	[dim,mapname] = SML_ReadDataTopWindow()
+	cwinname = winname(0,1)
+		
+	switch(dim)	
+		case 1:	// profile case
+			if(strlen(csrinfo(G))==0)
+				SML_Update_cursor()
+				SML_DataLoadTmp()
+				cursor /H=1/S=2 G $mapname pxvalue
+				SetWindow $cwinname hook(myHook)=SML_CursorProc
+			else
+				SetWindow $cwinname hook(myHook)=$""
+				cursor /K G 
+			endif
+			break	
+		case 2:	// profile case
+			if (cond1==0)  // case of appendiong cursor and pointAy box
+				cwinname = winname(0,1,1)  // get topwindow name
+				AppendToGraph :SpatialMapLoad:pointAy vs :SpatialMapLoad:pointAx
+				SML_Update_cursor()
+				SML_DataLoadTmp()
+				cursor /H=1/I/S=2 G $mapname pxvalue,pyvalue   // append cursor (cross type)
+				SetWindow $cwinname hook(myHook)=SML_CursorProc  // hook the curdor to macro of SML_CursorProc
+			elseif (cond1==1) //case of removing cursor and pointAy box
+				SetWindow $cwinname hook(myHook)=$""  // hook off the curdor 
+				RemoveFromGraph pointAy  
+				cursor /K G 
+			endif
+			
+			break		
+	endswitch
 	
-		cwinname = winname(0,1,1)  // get topwindow name
-		AppendToGraph :SpatialMapLoad:pointAy vs :SpatialMapLoad:pointAx
-		SML_Update_cursor()
-		SML_DataLoadTmp()
-		
-		string imagename = StringFromList(0, ImageNameList("", ";")) // get 2dmat name of top window
-		cursor /H=1/I/S=2 G $imagename pxvalue,pyvalue   // append cursor (cross type)
-		SetWindow $cwinname hook(myHook)=SML_CursorProc  // hook the curdor to macro of SML_CursorProc
-		
-		
-	elseif (cond1==1) //case of removing cursor and pointAy box
-		SetWindow $cwinname hook(myHook)=$""  // hook off the curdor 
-		RemoveFromGraph pointAy  
-		cursor /K G 
-		
-	endif
-		
+
 End
 
 Function SML_Check_integbox(ctrlName,checked) : CheckBoxControl
@@ -1073,7 +1091,8 @@ Function SML_button_showloadmat(ctrlName) : ButtonControl
 		AppendToGraph loadmat
 	elseif(ndim==2)
 		AppendImage loadmat
-		ModifyImage loadmat ctab= {*,*,Terrain256,0}
+		string iname = wavename("",0,1)
+		ModifyImage $iname ctab= {*,*,Terrain256,0}
 	//	ModifyGraph swapXY=1
 	endif
 
@@ -1167,6 +1186,7 @@ Function SML_CursorProc(s)
 			if(cmpstr(s.cursorName,"G")==0)
 			px = s.pointNumber
 			py = s.ypointNumber
+//		print px,py
 //			print s.traceName, s.cursorName, s.pointNumber, s.ypointNumber
 			SML_Update_cursor()
 			SML_DataLoadTmp()
@@ -1176,3 +1196,56 @@ Function SML_CursorProc(s)
 
 	
 End
+
+
+Function [variable dimflag, string wavename0] SML_ReadDataTopWindow()
+
+//	NVAR xs = dfr:SML_xstart, xstep = dfr:SML_xstep, xnum = dfr:SML_xnum
+//	NVAR ys = dfr:SML_ystart, ystep = dfr:SML_ystep, ynum = dfr:SML_ynum
+// 将来的に、map やprifileの中に、1D/2Dフラグ、座標情報、path情報、SESnum情報をnoteに書き込み
+// windowを指定したときに、mapping macroのパラメーターを更新させる
+
+	string traceList = TraceNameList("", ";", 1) 
+	string imagelist = imageNameList("", ";") 
+	string wn1
+	variable index, itemnum
+	
+
+	if(itemsinlist(imagelist)==0)
+		dimflag = 1
+		itemnum = itemsinlist(traceList); index =0
+		Do
+			wn1=stringfromList(index,traceList)
+			if(stringmatch(wn1,"*profile*")==1)
+				break
+			endif
+			index+=1
+			wn1 = ""
+		while(index<itemnum)
+		wavename0 = wn1
+		
+		
+	elseif(itemsinlist(imagelist)>0)
+		dimflag = 2
+		itemnum = itemsinlist(imagelist); index =0
+		Do
+			wn1=stringfromList(index,imagelist)
+			if(stringmatch(wn1,"*spatialmap*")==1)
+				break
+			endif
+			index+=1
+			wn1 = ""
+		while(index<itemnum)
+		wavename0 = wn1
+	endif
+	
+	return [dimflag,wavename0]
+
+End
+
+function calling()
+	string s1
+	variable dim
+	[dim,s1] = SML_ReadDataTopWindow()
+	print dim,s1
+	end
