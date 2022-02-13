@@ -7,7 +7,11 @@
 //  
 //  Seigo Soiuma,    Tohoku University  
 //	 2020, Nov
-//  last update  2021, 1st, July
+//  last update  2022, 13th, Feburary
+//
+//   [注意]　　verr1.9.3以降は、Igor 8 以降のみ対応！！！
+//
+
 
 //	[使い方]		(1) "path"で空間mapしたデータフォルダを指定
 //					(2) 2D or 1D でmappingの次元を選択
@@ -61,6 +65,12 @@
 //				3.	赤boxと連動して表示される、その点のデータも複数regionに対応 (SESのみ)
 //				[使い方]	パネルの下から2行目に、「wn」という数値設定を追加したので、その数値を変えてみたいregionを
 //					みたいregionを選択する。wn数値設定の横にregion名が表示される。
+//
+// ver 1.9.3	[Igor vre8でないと使えないう]
+//				1d profileでもcursor機能を追加。showボタンのmodify imageのバグを修正。
+//				読み込むデータが2Dのとき、角度方向の全積分(edcsum)、エネルギー方向の全積分(mdcsum)を1dwaveとしてrootフォルダ下に作成する機能を追加
+//				表示する際は、自分でrootフォルダのedcsum、mdcsumを表示すること
+
 
 Window SpatMapLoad() : Panel
 	PauseUpdate; Silent 1		// building window...
