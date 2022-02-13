@@ -1081,7 +1081,7 @@ Function SML_button_showloadmat(ctrlName) : ButtonControl
 	Display;DelayUpdate
 
 	String loadmatname = "loadmat" +num2str(sesdatanum)
-	print loadmatname
+//	print loadmatname
 	DFREF dfr = root:SpatialMapLoad
 	wave loadmat = dfr:$loadmatname
 
@@ -1186,10 +1186,10 @@ Function SML_CursorProc(s)
 			if(cmpstr(s.cursorName,"G")==0)
 			px = s.pointNumber
 			py = s.ypointNumber
-//		print px,py
 //			print s.traceName, s.cursorName, s.pointNumber, s.ypointNumber
 			SML_Update_cursor()
 			SML_DataLoadTmp()
+			SML_reduce1Dwave()
 			endif
 		break
 	endswitch
@@ -1243,9 +1243,42 @@ Function [variable dimflag, string wavename0] SML_ReadDataTopWindow()
 
 End
 
-function calling()
-	string s1
-	variable dim
-	[dim,s1] = SML_ReadDataTopWindow()
-	print dim,s1
-	end
+//function calling()
+//	string s1
+//	variable dim
+//	[dim,s1] = SML_ReadDataTopWindow()
+//	print dim,s1
+// End
+	
+	
+	
+Function SML_reduce1Dwave()
+	DFREF dfr = root:SpatialMapLoad
+	NVAR sesdatanum=dfr:SML_sesdatanum
+	
+	String loadmatname = "loadmat" +num2str(sesdatanum)
+	wave loadmat = dfr:$loadmatname
+	
+	if(waveDims(loadmat)==1)
+		return -1
+	endif
+
+	variable enum = dimsize(loadmat,0)
+	variable anum = dimsize(loadmat,1)
+	variable eoffset = dimoffset(loadmat,0)
+	variable aoffset = dimoffset(loadmat,1)
+	variable edelta = dimdelta(loadmat,0)
+	variable adelta = dimdelta(loadmat,1)
+	
+	make/O/D/N=(enum) edcsum
+	make/O/D/N=(anum) mdcsum0,mdcsum 
+
+	MatrixOP/o edcsum = sumRows(loadmat)
+	MatrixOP/o mdcsum0 = sumCols(loadmat)
+	mdcsum = mdcsum0[0][p]
+	
+	SetScale/P x (eoffset),(edelta),"", edcsum
+	SetScale/P x (aoffset),(adelta),"", mdcsum
+	
+
+End
